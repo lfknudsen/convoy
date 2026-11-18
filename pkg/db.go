@@ -109,3 +109,27 @@ func OpenDB() (*sql.DB, error) {
 	db := sql.OpenDB(conn)
 	return db, db.Ping()
 }
+
+func LoadDB(db *sql.DB) (*list.List, error) {
+	lock.Lock()
+	defer lock.Unlock()
+	rows, err := db.Query("SELECT url FROM queue ORDER BY added")
+	if err != nil {
+		return nil, err
+	}
+	defer func(rows *sql.Rows) {
+		_ = rows.Close()
+	}(rows)
+	l := list.New()
+	for rows.Next() {
+		var url string
+		err = rows.Scan(&url)
+		if err != nil {
+			_ = rows.Close()
+			return nil, err
+		}
+		_ = l.PushBack(url)
+	}
+	err = rows.Err()
+	return l, err
+}

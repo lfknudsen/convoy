@@ -30,6 +30,10 @@ func main() {
 	defer func(db *sql.DB) {
 		_ = db.Close()
 	}(db)
+	List, err = LoadDB(db)
+	if err != nil {
+		log.Fatal(err)
+	}
 	wait := StartServer(*Port, db)
 	stopped := false
 	for !stopped {
