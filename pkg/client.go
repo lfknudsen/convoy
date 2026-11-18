@@ -9,6 +9,7 @@ import (
 	. "convoy/proto"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type ConvoyClient struct {
@@ -20,7 +21,9 @@ type ConvoyClient struct {
 func NewConvoyClient(port int) (client *ConvoyClient) {
 	client = new(ConvoyClient{})
 
-	var opts []grpc.DialOption
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
 	connString := fmt.Sprintf("localhost:%d", port)
 	conn, err := grpc.NewClient(connString, opts...)
 	if err != nil {
