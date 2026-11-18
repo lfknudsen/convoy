@@ -28,7 +28,7 @@ func push(db *sql.DB, url string) error {
 	if err != nil {
 		return err
 	}
-	_, err = statement.Exec(1, time.Now().Unix(), url)
+	_, err = statement.Exec(entryVersion, time.Now().Unix(), url)
 	if err != nil {
 		_ = statement.Close()
 		return err
