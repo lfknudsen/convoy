@@ -19,3 +19,5 @@ var ConvoyDir = filepath.Join(getExecPath(), ".convoy")
 var databaseName = "convoy.db"
 
 var connectionString = fmt.Sprintf("file:%s/%s", ConvoyDir, databaseName)
+
+const entryVersion = 1

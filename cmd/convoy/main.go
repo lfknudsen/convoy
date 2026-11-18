@@ -11,7 +11,6 @@ import (
 )
 
 const version = "0.1.0"
-const entryVersion = 1
 
 var Port = flag.IntP("port", "p", 8080, "Port to listen on.")
 
