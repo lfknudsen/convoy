@@ -45,6 +45,12 @@ func push(db *sql.DB, url string) error {
 	return nil
 }
 
+type QueueElement struct {
+	version int
+	added   int64
+	url     string
+}
+
 func pop(db *sql.DB) (*Link, error) {
 	lock.Lock()
 	defer lock.Unlock()
@@ -52,6 +58,26 @@ func pop(db *sql.DB) (*Link, error) {
 	if front == nil {
 		return nil, errors.New("list is empty")
 	}
+
+	// Retrieve the matching element in the database, so we can persist its
+	// column values in subsequent tables.
+	rows, err := db.Query("SELECT version, added, url FROM queue WHERE url=?", front.Value.(string))
+	if err != nil {
+		return nil, err
+	}
+	var element QueueElement
+	if !rows.Next() {
+		_ = rows.Close()
+		return nil, errors.New("database queue is empty; linked list and database are inconsistent")
+	}
+	err = rows.Scan(&element.version, &element.added, &element.url)
+	if err != nil {
+		_ = rows.Close()
+		return nil, err
+	}
+	_ = rows.Close()
+
+	// Move element from `queue` to `in_progress`
 	tx, err := db.Begin()
 	if err != nil {
 		return nil, err
@@ -69,12 +95,14 @@ func pop(db *sql.DB) (*Link, error) {
 	}
 	_ = statement.Close()
 
-	statement, err = tx.Prepare("INSERT INTO in_progress VALUES(?,?,?,?)")
+	statement, err = tx.Prepare(`
+		INSERT INTO in_progress (version, added, started, url)
+		VALUES(?,?,?,?)`)
 	if err != nil {
 		_ = tx.Rollback()
 		return nil, err
 	}
-	_, err = statement.Exec(1, time.Now().Unix(), front.Value.(*Link).Url)
+	_, err = statement.Exec(element.version, element.added, time.Now().Unix(), element.url)
 	if err != nil {
 		_ = tx.Rollback()
 		_ = statement.Close()
