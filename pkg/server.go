@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net"
@@ -14,6 +15,7 @@ import (
 type Server struct {
 	UnimplementedQueueServer
 	port int
+	db   *sql.DB
 }
 
 func (s *Server) Serve(server *grpc.Server, lis net.Listener, wait chan struct{}) {
@@ -26,7 +28,7 @@ func (s *Server) Serve(server *grpc.Server, lis net.Listener, wait chan struct{}
 }
 
 func (s *Server) Push(_ context.Context, link *Link) (*Confirmation, error) {
-	err := push(link.GetUrl())
+	err := push(s.db, link.GetUrl())
 	if err != nil {
 		log.Println("Download error:", err)
 	}
@@ -37,16 +39,17 @@ func (s *Server) Push(_ context.Context, link *Link) (*Confirmation, error) {
 
 func (s *Server) Pop(_ context.Context, worker *WorkerID) (string, error) {
 	log.Printf("Worker %s requested a task.", worker)
-	link, err := pop()
+	link, err := pop(s.db)
 	if err != nil {
 		log.Println("Download error:", err)
 	}
 	return link.Url, err
 }
 
-func StartServer(port int) chan struct{} {
+func StartServer(port int, db *sql.DB) chan struct{} {
 	Srv := Server{
 		port: port,
+		db:   db,
 	}
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", Srv.port))
 	if err != nil {
