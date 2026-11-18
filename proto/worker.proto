@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "proto/convoy.proto";
+
+option go_package = "./convoy";
+
+service Worker {
+  rpc Download(Link) returns (stream Progress) {};
+  rpc Ping(Void) returns (Pong) {}
+}
+
+message Void {}
+message Pong {}

@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option go_package = "./convoy";
+
+service Queue {
+  rpc Connect(stream Link) returns (stream Progress) {}
+  rpc PushMany(Links) returns (Confirmations) {}
+  rpc Push(Link) returns (Confirmation) {}
+}
+
+service Broadcast {
+  rpc Await(Subscriber) returns (Confirmation) {}
+  rpc Leave(Subscriber) returns (Confirm) {}
+}
+
+message MsgSource {
+  string uuid = 1;
+}
+
+message Links {
+  repeated Link links = 1;
+}
+
+message Link {
+  string  id = 1;
+  string url = 2;
+}
+
+enum status {
+  added = 0;
+  started = 1;
+  finished = 2;
+  failed = 4;
+}
+
+message Confirmation {
+  bool added = 1;
+}
+
+message Confirm {}
+
+message Confirmations {
+  string linkId = 1;
+  repeated bool added = 2;
+}
+
+message Progress {
+  status downStatus = 1;
+  string linkUuid = 2;
+  float percentage = 3;
+}
+
+message WorkerID {
+  string uuid = 1;
+}
+
+message Subscriber {
+  string uuid = 1;
+  uint32 port = 2;
+}
