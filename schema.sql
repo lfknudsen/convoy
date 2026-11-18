@@ -1,14 +1,14 @@
 CREATE TABLE IF NOT EXISTS queue (
     version INT,
     added   INT,
-    url     VARCHAR PRIMARY KEY
+    message VARCHAR PRIMARY KEY
 );
 
 CREATE TABLE IF NOT EXISTS in_progress (
     version INT,
     added   INT,
     started INT,
-    url     VARCHAR PRIMARY KEY
+    message VARCHAR PRIMARY KEY
 );
 
 CREATE TABLE IF NOT EXISTS finished (
@@ -16,5 +16,5 @@ CREATE TABLE IF NOT EXISTS finished (
     added       INT,
     started     INT,
     finished    INT,
-    url         VARCHAR PRIMARY KEY
+    message     VARCHAR PRIMARY KEY
 );

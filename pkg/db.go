@@ -24,7 +24,7 @@ func push(db *sql.DB, url string) error {
 	if err != nil {
 		return err
 	}
-	statement, err := tx.Prepare("INSERT INTO queue(version, added, url) VALUES(?,?,?)")
+	statement, err := tx.Prepare("INSERT INTO queue(version, added, message) VALUES(?,?,?)")
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func pop(db *sql.DB) (*Link, error) {
 
 	// Retrieve the matching element in the database, so we can persist its
 	// column values in subsequent tables.
-	rows, err := db.Query("SELECT version, added, url FROM queue WHERE url=?", front.Value.(string))
+	rows, err := db.Query("SELECT version, added, message FROM queue WHERE message=?", front.Value.(string))
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func pop(db *sql.DB) (*Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	statement, err := tx.Prepare("DELETE FROM queue WHERE url=?")
+	statement, err := tx.Prepare("DELETE FROM queue WHERE message=?")
 	if err != nil {
 		_ = tx.Rollback()
 		return nil, err
@@ -96,7 +96,7 @@ func pop(db *sql.DB) (*Link, error) {
 	_ = statement.Close()
 
 	statement, err = tx.Prepare(`
-		INSERT INTO in_progress (version, added, started, url)
+		INSERT INTO in_progress (version, added, started, message)
 		VALUES(?,?,?,?)`)
 	if err != nil {
 		_ = tx.Rollback()
@@ -141,7 +141,7 @@ func OpenDB() (*sql.DB, error) {
 func LoadDB(db *sql.DB) (*list.List, error) {
 	lock.Lock()
 	defer lock.Unlock()
-	rows, err := db.Query("SELECT url FROM queue ORDER BY added")
+	rows, err := db.Query("SELECT message FROM queue ORDER BY added")
 	if err != nil {
 		return nil, err
 	}
